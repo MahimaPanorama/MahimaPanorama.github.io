@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Check User Existence</title>
+  <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-firestore.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Function to handle the POST request
+    async function handlePostRequest(req, res) {
+      const phone = req.body.phone;
+
+      if (!phone) {
+        res.status(400).send({ error: 'Phone number is required' });
+        return;
+      }
+
+      try {
+        const userRef = db.collection('users').doc(phone);
+        const doc = await userRef.get();
+
+        if (doc.exists) {
+          res.status(200).send({ exists: true });
+        } else {
+          res.status(200).send({ exists: false });
+        }
+      } catch (error) {
+        res.status(500).send({ error: error.message });
+      }
+    }
+
+    // Function to parse the POST request
+    function handleRequest(event) {
+      event.preventDefault();
+      
+      const phone = new URLSearchParams(window.location.search).get('phone');
+
+      if (!phone) {
+        document.body.innerText = 'Phone number is required';
+        return;
+      }
+
+      handlePostRequest({ body: { phone } }, {
+        status: (code) => {
+          console.log('Status:', code);
+          return { send: (response) => document.body.innerText = JSON.stringify(response) };
+        }
+      });
+    }
+
+    window.onload = handleRequest;
+  </script>
+</head>
+<body>
+  <!-- Output will be displayed here -->
+</body>
+</html>
